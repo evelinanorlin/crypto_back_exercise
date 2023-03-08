@@ -50,6 +50,34 @@ router.post('/add', function(req,res){
     const foundUser = users.find((u) => u.username === username);
 
     if(foundUser){
+      res.send({message: "Username is already taken"});
+      return
+    }
+
+    let newestUser = {"username": username, "password": cryptPass};
+    users.push(newestUser);
+
+    fs.writeFile("users.json", JSON.stringify(users, null, 2), function(err){
+      if(err){
+        console.log(err)
+      } 
+    })
+    res.send({message: "added new"});
+    })
+});
+
+router.post('/login', function(req, res){
+  let newUser = req.body;
+  let username = newUser.user;
+  let password = newUser.password;
+
+  fs.readFile("users.json", function(err, data){
+
+    const users = JSON.parse(data);
+
+    const foundUser = users.find((u) => u.username === username);
+
+    if(foundUser){
       // let decrypted = CryptoJS.AES.decrypt(foudUser.password, "Saltnyckel").toString(CryptoJS.enc.Utf8);
       let uncryptedPass = foundUser.password;
       let decrypted = CryptoJS.AES.decrypt(uncryptedPass, "Saltnyckel").toString(CryptoJS.enc.Utf8);
@@ -60,18 +88,10 @@ router.post('/add', function(req,res){
         res.send({message: "wrong password!"});
         return
       }
+    } else{
+      res.send({message: "user not found"});
     }
-
-    let newestUser = {"username": username, "password": cryptPass};
-        users.push(newestUser);
-    
-        fs.writeFile("users.json", JSON.stringify(users, null, 2), function(err){
-          if(err){
-            console.log(err)
-          } 
-      })
-      res.send({message: "added new"})
+  })
 })
-});
 
 module.exports = router;
